@@ -60,7 +60,7 @@ const PlantExplorer = () => {
           `);
           
         if (selectedCategory !== "all") {
-          query = query.eq("category_id", selectedCategory);
+          query = query.eq("category_id", parseInt(selectedCategory));
         }
         
         const { data, error } = await query;

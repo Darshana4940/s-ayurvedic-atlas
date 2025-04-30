@@ -32,7 +32,7 @@ const SearchDropdown = ({ placeholder = "Search plants...", className = "" }: Se
     try {
       const { data, error } = await supabase
         .from("plants")
-        .select("id, name, scientific_name, image_url")
+        .select("*")
         .or(`name.ilike.%${term}%,scientific_name.ilike.%${term}%,description.ilike.%${term}%`)
         .limit(5);
 

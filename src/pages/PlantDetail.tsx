@@ -26,7 +26,7 @@ const PlantDetail = () => {
             *,
             plant_categories(name, description)
           `)
-          .eq("id", id)
+          .eq("id", parseInt(id))
           .single();
 
         if (error) {

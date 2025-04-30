@@ -6,7 +6,7 @@ import InfoSection from "@/components/InfoSection";
 import Footer from "@/components/Footer";
 import SearchDropdown from "@/components/SearchDropdown";
 import { Button } from "@/components/ui/button";
-import { Leaf, Plant } from "lucide-react";
+import { Leaf, Sprout } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Index = () => {
@@ -42,7 +42,7 @@ const Index = () => {
               </div>
               <Button size="lg" className="bg-herbal-green hover:bg-herbal-green/90 text-white" asChild>
                 <Link to="/plants">
-                  <Plant className="mr-2" />
+                  <Sprout className="mr-2" />
                   Browse All Plants
                 </Link>
               </Button>
