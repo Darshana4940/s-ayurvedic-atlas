@@ -1,8 +1,23 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Link } from "react-router-dom";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const Footer = () => {
+  const [email, setEmail] = useState("");
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email) {
+      toast.success("Thank you for subscribing to our newsletter!");
+      setEmail("");
+    } else {
+      toast.error("Please enter your email address");
+    }
+  };
+
   return (
     <footer className="bg-herbal-green/10 pt-16 pb-8">
       <div className="container mx-auto px-4">
@@ -49,23 +64,23 @@ const Footer = () => {
           <div>
             <h3 className="font-bold text-lg mb-4 text-herbal-brown">Quick Links</h3>
             <ul className="space-y-3">
-              <li><a href="#" className="text-gray-600 hover:text-herbal-green">Home</a></li>
-              <li><a href="#" className="text-gray-600 hover:text-herbal-green">Explore Plants</a></li>
-              <li><a href="#" className="text-gray-600 hover:text-herbal-green">Virtual Tours</a></li>
-              <li><a href="#" className="text-gray-600 hover:text-herbal-green">Search</a></li>
-              <li><a href="#" className="text-gray-600 hover:text-herbal-green">About AYUSH</a></li>
-              <li><a href="#" className="text-gray-600 hover:text-herbal-green">Contact</a></li>
+              <li><Link to="/" className="text-gray-600 hover:text-herbal-green">Home</Link></li>
+              <li><Link to="/explore" className="text-gray-600 hover:text-herbal-green">Explore Plants</Link></li>
+              <li><Link to="/virtual-tours" className="text-gray-600 hover:text-herbal-green">Virtual Tours</Link></li>
+              <li><Link to="/search" className="text-gray-600 hover:text-herbal-green">Search</Link></li>
+              <li><Link to="/about-ayush" className="text-gray-600 hover:text-herbal-green">About AYUSH</Link></li>
+              <li><Link to="/contact" className="text-gray-600 hover:text-herbal-green">Contact</Link></li>
             </ul>
           </div>
           <div>
             <h3 className="font-bold text-lg mb-4 text-herbal-brown">Resources</h3>
             <ul className="space-y-3">
-              <li><a href="#" className="text-gray-600 hover:text-herbal-green">Cultivation Guide</a></li>
-              <li><a href="#" className="text-gray-600 hover:text-herbal-green">Ayurvedic Principles</a></li>
-              <li><a href="#" className="text-gray-600 hover:text-herbal-green">AYUSH Systems</a></li>
-              <li><a href="#" className="text-gray-600 hover:text-herbal-green">Plant Conservation</a></li>
-              <li><a href="#" className="text-gray-600 hover:text-herbal-green">Research Papers</a></li>
-              <li><a href="#" className="text-gray-600 hover:text-herbal-green">Sustainable Practices</a></li>
+              <li><Link to="/resources?category=cultivation" className="text-gray-600 hover:text-herbal-green">Cultivation Guide</Link></li>
+              <li><Link to="/resources?category=principles" className="text-gray-600 hover:text-herbal-green">Ayurvedic Principles</Link></li>
+              <li><Link to="/resources?category=systems" className="text-gray-600 hover:text-herbal-green">AYUSH Systems</Link></li>
+              <li><Link to="/resources?category=conservation" className="text-gray-600 hover:text-herbal-green">Plant Conservation</Link></li>
+              <li><Link to="/resources?category=research" className="text-gray-600 hover:text-herbal-green">Research Papers</Link></li>
+              <li><Link to="/resources?category=sustainable" className="text-gray-600 hover:text-herbal-green">Sustainable Practices</Link></li>
             </ul>
           </div>
           <div>
@@ -73,19 +88,23 @@ const Footer = () => {
             <p className="text-gray-600 mb-4">
               Subscribe to our newsletter for updates on new plants, research, and features.
             </p>
-            <div className="flex space-x-2">
-              <Input 
-                className="bg-white border-herbal-green/20" 
-                placeholder="Your email address" 
-                type="email" 
-              />
-              <Button className="bg-herbal-green hover:bg-herbal-green/90 text-white">
-                Subscribe
-              </Button>
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              By subscribing, you agree to our Privacy Policy.
-            </p>
+            <form onSubmit={handleSubscribe} className="flex flex-col space-y-2">
+              <div className="flex space-x-2">
+                <Input 
+                  className="bg-white border-herbal-green/20" 
+                  placeholder="Your email address" 
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <Button type="submit" className="bg-herbal-green hover:bg-herbal-green/90 text-white">
+                  Subscribe
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500">
+                By subscribing, you agree to our Privacy Policy.
+              </p>
+            </form>
           </div>
         </div>
 
