@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import PlantAI from "@/components/PlantAI";
 
 const PlantDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -147,6 +148,14 @@ const PlantDetail = () => {
                 </div>
               )}
             </div>
+          </div>
+          
+          <div className="mt-10">
+            <h2 className="text-2xl font-semibold mb-6 text-herbal-brown">AI-Powered Plant Information</h2>
+            <PlantAI 
+              plant={plant} 
+              initialPrompt={`Tell me more about the medicinal properties and traditional uses of ${plant.name} (${plant.scientific_name}).`} 
+            />
           </div>
         </div>
       </main>
