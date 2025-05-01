@@ -17,7 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import PlantAI from "@/components/PlantAI";
+import { Sparkles } from "lucide-react";
 
 const PlantExplorer = () => {
   const [plants, setPlants] = useState<Plant[]>([]);
@@ -25,6 +28,8 @@ const PlantExplorer = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedPlant, setSelectedPlant] = useState<Plant | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   
   useEffect(() => {
     const fetchCategories = async () => {
@@ -92,6 +97,12 @@ const PlantExplorer = () => {
 
   const defaultImage = "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=800&h=600&q=80";
 
+  const handlePlantClick = (plant: Plant, e: React.MouseEvent) => {
+    e.preventDefault();
+    setSelectedPlant(plant);
+    setIsDetailsOpen(true);
+  };
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -147,8 +158,8 @@ const PlantExplorer = () => {
           ) : filteredPlants.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {filteredPlants.map((plant) => (
-                <Link to={`/plant/${plant.id}`} key={plant.id}>
-                  <Card className="h-full overflow-hidden hover:shadow-md transition-shadow duration-300">
+                <div key={plant.id} onClick={(e) => handlePlantClick(plant, e)}>
+                  <Card className="h-full overflow-hidden hover:shadow-md transition-shadow duration-300 cursor-pointer">
                     <div className="h-48 overflow-hidden">
                       <img
                         src={plant.image_url || defaultImage}
@@ -176,9 +187,13 @@ const PlantExplorer = () => {
                           {plant.description}
                         </p>
                       )}
+                      <div className="mt-3 flex items-center text-herbal-green">
+                        <Sparkles className="h-4 w-4 mr-1" />
+                        <span className="text-xs">Click for AI insights</span>
+                      </div>
                     </CardContent>
                   </Card>
-                </Link>
+                </div>
               ))}
             </div>
           ) : (
@@ -196,6 +211,72 @@ const PlantExplorer = () => {
           )}
         </div>
       </main>
+
+      {/* Plant Details Dialog with Gemini AI */}
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="max-w-3xl">
+          {selectedPlant && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-herbal-green">
+                  {selectedPlant.name}
+                </DialogTitle>
+                <p className="text-gray-600 italic">
+                  {selectedPlant.scientific_name}
+                </p>
+              </DialogHeader>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+                <div>
+                  <img
+                    src={selectedPlant.image_url || defaultImage}
+                    alt={selectedPlant.name}
+                    className="w-full h-64 object-cover rounded-lg"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = defaultImage;
+                    }}
+                  />
+
+                  <div className="mt-4">
+                    {selectedPlant.description && (
+                      <div className="mb-4">
+                        <h3 className="font-semibold text-herbal-brown">Description</h3>
+                        <p className="text-gray-700">{selectedPlant.description}</p>
+                      </div>
+                    )}
+                    
+                    {selectedPlant.medicinal_uses && (
+                      <div className="mb-4">
+                        <h3 className="font-semibold text-herbal-brown">Medicinal Uses</h3>
+                        <p className="text-gray-700">{selectedPlant.medicinal_uses}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <Button 
+                    asChild 
+                    variant="outline" 
+                    className="mt-4 w-full border-herbal-green text-herbal-green hover:bg-herbal-green/10"
+                  >
+                    <Link to={`/plant/${selectedPlant.id}`}>
+                      View Full Details
+                    </Link>
+                  </Button>
+                </div>
+
+                <div>
+                  <PlantAI 
+                    plant={selectedPlant} 
+                    title="Ask AI About This Plant" 
+                    initialPrompt={`What are the key medicinal properties and traditional uses of ${selectedPlant.name}?`}
+                  />
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+      
       <Footer />
     </div>
   );

@@ -46,9 +46,9 @@ const PlantAI = ({ plant, initialPrompt, title = "Ask about this plant", classNa
       <CardContent>
         {answer && (
           <div className="mb-4 p-4 bg-herbal-green/5 rounded-lg border border-herbal-green/20">
-            <div className="prose prose-sm max-w-none">
+            <div className="prose prose-sm max-w-none font-inter text-gray-700">
               {answer.split('\n').map((paragraph, index) => (
-                <p key={index} className="mb-2 last:mb-0">
+                <p key={index} className="mb-3 last:mb-0 text-base">
                   {paragraph}
                 </p>
               ))}
