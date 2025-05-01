@@ -8,13 +8,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { Compass, Filter } from "lucide-react";
+import { Compass, Filter, Sparkles } from "lucide-react";
+import { toast } from "sonner";
+import PlantAI from "@/components/PlantAI";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const ExplorePage = () => {
   const [plants, setPlants] = useState<Plant[]>([]);
   const [categories, setCategories] = useState<PlantCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedPlant, setSelectedPlant] = useState<Plant | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -28,6 +33,7 @@ const ExplorePage = () => {
         setCategories(data || []);
       } catch (error) {
         console.error("Error fetching categories:", error);
+        toast.error("Failed to load plant categories");
       }
     };
     
@@ -57,6 +63,7 @@ const ExplorePage = () => {
         setPlants(data || []);
       } catch (error) {
         console.error("Error fetching plants:", error);
+        toast.error("Failed to load plants");
       } finally {
         setLoading(false);
       }
@@ -64,6 +71,11 @@ const ExplorePage = () => {
     
     fetchPlants();
   }, [selectedCategory]);
+
+  const handlePlantClick = (plant: Plant) => {
+    setSelectedPlant(plant);
+    setIsDetailsOpen(true);
+  };
   
   const defaultImage = "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=800&h=600&q=80";
 
@@ -133,38 +145,44 @@ const ExplorePage = () => {
             ) : plants.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {plants.map((plant) => (
-                  <Link to={`/plant/${plant.id}`} key={plant.id}>
-                    <Card className="h-full overflow-hidden hover:shadow-md transition-shadow duration-300">
-                      <div className="h-48 overflow-hidden">
-                        <img
-                          src={plant.image_url || defaultImage}
-                          alt={plant.name}
-                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = defaultImage;
-                          }}
-                        />
-                      </div>
-                      <CardContent className="p-4">
-                        {plant.category_id && (
-                          <Badge variant="outline" className="mb-2 bg-herbal-green/10 text-herbal-green border-herbal-green/20">
-                            {(plant as any).plant_categories?.name || "Uncategorized"}
-                          </Badge>
-                        )}
-                        <h3 className="font-semibold text-lg text-herbal-green mb-1">
-                          {plant.name}
-                        </h3>
-                        <p className="text-sm text-gray-600 italic mb-2">
-                          {plant.scientific_name}
+                  <Card 
+                    key={plant.id} 
+                    className="h-full overflow-hidden hover:shadow-md transition-shadow duration-300 cursor-pointer"
+                    onClick={() => handlePlantClick(plant)}
+                  >
+                    <div className="h-48 overflow-hidden">
+                      <img
+                        src={plant.image_url || defaultImage}
+                        alt={plant.name}
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = defaultImage;
+                        }}
+                      />
+                    </div>
+                    <CardContent className="p-4">
+                      {plant.category_id && (
+                        <Badge variant="outline" className="mb-2 bg-herbal-green/10 text-herbal-green border-herbal-green/20">
+                          {(plant as any).plant_categories?.name || "Uncategorized"}
+                        </Badge>
+                      )}
+                      <h3 className="font-semibold text-lg text-herbal-green mb-1">
+                        {plant.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 italic mb-2">
+                        {plant.scientific_name}
+                      </p>
+                      {plant.description && (
+                        <p className="text-sm text-gray-700 line-clamp-2">
+                          {plant.description}
                         </p>
-                        {plant.description && (
-                          <p className="text-sm text-gray-700 line-clamp-2">
-                            {plant.description}
-                          </p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </Link>
+                      )}
+                      <div className="mt-3 flex items-center text-herbal-green">
+                        <Sparkles className="h-4 w-4 mr-1" />
+                        <span className="text-xs">Click for AI insights</span>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             ) : (
@@ -179,6 +197,72 @@ const ExplorePage = () => {
           </div>
         </section>
       </main>
+
+      {/* Plant Details Dialog with Gemini AI */}
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="max-w-3xl">
+          {selectedPlant && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-herbal-green">
+                  {selectedPlant.name}
+                </DialogTitle>
+                <p className="text-gray-600 italic">
+                  {selectedPlant.scientific_name}
+                </p>
+              </DialogHeader>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+                <div>
+                  <img
+                    src={selectedPlant.image_url || defaultImage}
+                    alt={selectedPlant.name}
+                    className="w-full h-64 object-cover rounded-lg"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = defaultImage;
+                    }}
+                  />
+
+                  <div className="mt-4">
+                    {selectedPlant.description && (
+                      <div className="mb-4">
+                        <h3 className="font-semibold text-herbal-brown">Description</h3>
+                        <p className="text-gray-700">{selectedPlant.description}</p>
+                      </div>
+                    )}
+                    
+                    {selectedPlant.medicinal_uses && (
+                      <div className="mb-4">
+                        <h3 className="font-semibold text-herbal-brown">Medicinal Uses</h3>
+                        <p className="text-gray-700">{selectedPlant.medicinal_uses}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <Button 
+                    asChild 
+                    variant="outline" 
+                    className="mt-4 w-full border-herbal-green text-herbal-green hover:bg-herbal-green/10"
+                  >
+                    <Link to={`/plant/${selectedPlant.id}`}>
+                      View Full Details
+                    </Link>
+                  </Button>
+                </div>
+
+                <div>
+                  <PlantAI 
+                    plant={selectedPlant} 
+                    title="Ask AI About This Plant" 
+                    initialPrompt={`What are the key medicinal properties and traditional uses of ${selectedPlant.name}?`}
+                  />
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Footer />
     </div>
   );
