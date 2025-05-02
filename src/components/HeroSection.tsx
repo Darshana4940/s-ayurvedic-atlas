@@ -29,7 +29,7 @@ const HeroSection = () => {
           alt="Lush green forest background" 
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/30"></div>
       </div>
       
       <div className="container mx-auto px-4 relative z-20">
@@ -54,7 +54,11 @@ const HeroSection = () => {
                 Enter the Virtual Garden
               </Link>
             </Button>
-            <Button variant="outline" className="border-white text-white hover:bg-white/20 hover:text-white text-lg px-8 py-6" asChild>
+            <Button 
+              variant="outline" 
+              className="border-white border-2 text-white hover:bg-white/20 hover:text-white text-lg px-8 py-6 shadow-lg shadow-black/30" 
+              asChild
+            >
               <Link to="/virtual-tours" id="featured-plants">
                 Take a Virtual Tour
               </Link>
