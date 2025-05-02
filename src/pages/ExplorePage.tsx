@@ -8,10 +8,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { Compass, Filter, Sparkles } from "lucide-react";
+import { Compass, Filter, Sparkles, Search } from "lucide-react";
 import { toast } from "sonner";
 import PlantAI from "@/components/PlantAI";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 const ExplorePage = () => {
   const [plants, setPlants] = useState<Plant[]>([]);
@@ -20,6 +21,7 @@ const ExplorePage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedPlant, setSelectedPlant] = useState<Plant | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -79,6 +81,17 @@ const ExplorePage = () => {
   
   const defaultImage = "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=800&h=600&q=80";
 
+  const filteredPlants = plants.filter(plant => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      searchTerm === "" ||
+      plant.name.toLowerCase().includes(searchLower) ||
+      plant.scientific_name.toLowerCase().includes(searchLower) ||
+      (plant.description && plant.description.toLowerCase().includes(searchLower)) ||
+      (plant.medicinal_uses && plant.medicinal_uses.toLowerCase().includes(searchLower))
+    );
+  });
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -98,10 +111,24 @@ const ExplorePage = () => {
           </div>
         </section>
         
-        {/* Filters section */}
+        {/* Search and Filters section */}
         <section className="py-10 border-b border-gray-100">
           <div className="container mx-auto px-4">
-            <div className="flex items-center gap-2 mb-6">
+            <div className="mb-6">
+              <div className="flex flex-col md:flex-row gap-4 mb-6">
+                <div className="relative flex-grow">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <Input
+                    placeholder="Search by plant name, properties, or uses..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 border-herbal-green/20 focus:border-herbal-green"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2 mb-4">
               <Filter className="h-5 w-5 text-herbal-green" />
               <h2 className="text-xl font-semibold text-herbal-green">Filter by Category</h2>
             </div>
@@ -142,9 +169,9 @@ const ExplorePage = () => {
                   </div>
                 ))}
               </div>
-            ) : plants.length > 0 ? (
+            ) : filteredPlants.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {plants.map((plant) => (
+                {filteredPlants.map((plant) => (
                   <Card 
                     key={plant.id} 
                     className="h-full overflow-hidden hover:shadow-md transition-shadow duration-300 cursor-pointer"
@@ -187,10 +214,13 @@ const ExplorePage = () => {
               </div>
             ) : (
               <div className="text-center py-20">
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">No plants found in this category</h3>
-                <p className="text-gray-600 mb-4">Try selecting a different category or check back later.</p>
-                <Button onClick={() => setSelectedCategory(null)} variant="outline" className="border-herbal-green text-herbal-green">
-                  View All Plants
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">No plants found</h3>
+                <p className="text-gray-600 mb-4">Try adjusting your search or category filters.</p>
+                <Button onClick={() => {
+                  setSelectedCategory(null);
+                  setSearchTerm("");
+                }} variant="outline" className="border-herbal-green text-herbal-green">
+                  Reset All Filters
                 </Button>
               </div>
             )}
@@ -207,9 +237,9 @@ const ExplorePage = () => {
                 <DialogTitle className="text-2xl font-bold text-herbal-green">
                   {selectedPlant.name}
                 </DialogTitle>
-                <p className="text-gray-600 italic">
+                <DialogDescription className="text-gray-600 italic">
                   {selectedPlant.scientific_name}
-                </p>
+                </DialogDescription>
               </DialogHeader>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
