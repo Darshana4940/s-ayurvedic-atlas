@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plant } from "@/types/plants";
-import { Sparkles, SendHorizonal, Loader2 } from "lucide-react";
+import { Sparkles, SendHorizonal, Loader2, RefreshCw } from "lucide-react";
 
 interface PlantAIProps {
   plant?: Plant;
@@ -17,7 +17,7 @@ interface PlantAIProps {
 const PlantAI = ({ plant, initialPrompt, title = "Ask about this plant", className = "" }: PlantAIProps) => {
   const [query, setQuery] = useState(initialPrompt || "");
   const [answer, setAnswer] = useState<string | null>(null);
-  const { generatePlantInfo, isLoading } = useGemini({
+  const { generatePlantInfo, isLoading, error } = useGemini({
     onSuccess: (content) => {
       setAnswer(content);
     }
@@ -33,6 +33,11 @@ const PlantAI = ({ plant, initialPrompt, title = "Ask about this plant", classNa
     }
   };
 
+  const handleReset = () => {
+    setQuery("");
+    setAnswer(null);
+  };
+
   return (
     <Card className={`w-full ${className}`}>
       <CardHeader className="pb-3">
@@ -41,18 +46,37 @@ const PlantAI = ({ plant, initialPrompt, title = "Ask about this plant", classNa
             <Sparkles className="h-5 w-5 mr-2 text-herbal-green" />
             {title}
           </CardTitle>
+          {answer && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleReset}
+              className="h-8 w-8 p-0"
+            >
+              <RefreshCw className="h-4 w-4" />
+              <span className="sr-only">Reset</span>
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent>
         {answer && (
           <div className="mb-4 p-4 bg-herbal-green/5 rounded-lg border border-herbal-green/20">
-            <div className="prose prose-sm max-w-none text-gray-700">
-              {answer.split('\n').map((paragraph, index) => (
-                <p key={index} className="mb-3 last:mb-0 text-base font-normal">
-                  {paragraph}
-                </p>
+            <div className="prose prose-sm max-w-none">
+              {answer.split('\n\n').map((paragraph, index) => (
+                paragraph ? (
+                  <p key={index} className="mb-3 last:mb-0 text-base font-normal text-gray-700">
+                    {paragraph}
+                  </p>
+                ) : <br key={index} />
               ))}
             </div>
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 rounded-lg border border-red-200">
+            <p className="text-red-700">{error.message}</p>
           </div>
         )}
 
@@ -63,14 +87,14 @@ const PlantAI = ({ plant, initialPrompt, title = "Ask about this plant", classNa
             placeholder={plant 
               ? `Ask anything about ${plant.name}...` 
               : "Ask about medicinal plants or Ayurvedic traditions..."}
-            className="min-h-[100px]"
+            className="min-h-[100px] text-base"
           />
         </form>
       </CardContent>
       <CardFooter>
         <Button 
           onClick={handleSubmit} 
-          className="w-full bg-herbal-green hover:bg-herbal-green/90"
+          className="w-full bg-herbal-green hover:bg-herbal-green/90 text-base"
           disabled={isLoading || !query.trim()}
         >
           {isLoading ? (
@@ -88,6 +112,6 @@ const PlantAI = ({ plant, initialPrompt, title = "Ask about this plant", classNa
       </CardFooter>
     </Card>
   );
-};
+}
 
 export default PlantAI;

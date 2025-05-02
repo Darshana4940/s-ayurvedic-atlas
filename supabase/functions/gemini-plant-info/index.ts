@@ -17,7 +17,15 @@ serve(async (req) => {
   }
 
   try {
+    if (!GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY environment variable not set");
+    }
+
     const { query, plantInfo } = await req.json();
+    
+    if (!query || query.trim() === '') {
+      throw new Error("Query is required");
+    }
     
     let prompt = query;
     
@@ -33,14 +41,16 @@ How to Use: ${plantInfo.how_to_use || 'Not available'}
 
 ${query}
 
-Please provide a comprehensive, accurate, and science-based response. Include information about traditional Ayurvedic, Unani, or Siddha medicine applications where relevant.`;
+Please provide a comprehensive, accurate, and science-based response about this specific plant. Include information about traditional Ayurvedic, Unani, or Siddha medicine applications where relevant. Format your response in clear paragraphs with appropriate spacing.`;
     } else {
       // If no specific plant info, use a general prompt about medicinal plants
       prompt = `As an expert in traditional medicinal plants and Ayurvedic medicine, please provide information about the following: ${query}
       
-Please provide a comprehensive, accurate, and science-based response. Include information about traditional Ayurvedic, Unani, or Siddha medicine applications where relevant.`;
+Please provide a comprehensive, accurate, and science-based response. Include information about traditional Ayurvedic, Unani, or Siddha medicine applications where relevant. Format your response in clear paragraphs with appropriate spacing.`;
     }
 
+    console.log(`Sending prompt to Gemini API: ${prompt.substring(0, 100)}...`);
+    
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: "POST",
       headers: {
@@ -83,6 +93,12 @@ Please provide a comprehensive, accurate, and science-based response. Include in
       })
     });
 
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Gemini API error:", errorData);
+      throw new Error(`Gemini API error: ${errorData.error?.message || response.statusText}`);
+    }
+
     const data = await response.json();
     
     // Check if response has the expected structure
@@ -92,10 +108,13 @@ Please provide a comprehensive, accurate, and science-based response. Include in
     }
 
     const generatedContent = data.candidates[0].content.parts[0].text;
+    
+    console.log(`Successfully generated content (${generatedContent.length} chars)`);
 
     return new Response(
       JSON.stringify({ 
-        content: generatedContent
+        content: generatedContent,
+        status: "success"
       }),
       { 
         headers: { 
@@ -109,7 +128,8 @@ Please provide a comprehensive, accurate, and science-based response. Include in
     
     return new Response(
       JSON.stringify({ 
-        error: error.message || "An error occurred while processing your request" 
+        error: error.message || "An error occurred while processing your request",
+        status: "error"
       }),
       { 
         status: 500, 
