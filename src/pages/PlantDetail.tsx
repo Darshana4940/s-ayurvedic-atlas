@@ -1,50 +1,16 @@
 
-import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Plant } from "@/types/plants";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { toast } from "sonner";
 import PlantAI from "@/components/PlantAI";
+import { usePlantDetail } from "@/hooks/usePlantData";
 
 const PlantDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const [plant, setPlant] = useState<Plant | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchPlant = async () => {
-      if (!id) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from("plants")
-          .select(`
-            *,
-            plant_categories(name, description)
-          `)
-          .eq("id", parseInt(id))
-          .single();
-
-        if (error) {
-          throw error;
-        }
-
-        setPlant(data);
-      } catch (error) {
-        console.error("Error fetching plant:", error);
-        toast.error("Failed to load plant details");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPlant();
-  }, [id]);
+  const { plant, loading } = usePlantDetail(id ? parseInt(id) : null);
 
   if (loading) {
     return (

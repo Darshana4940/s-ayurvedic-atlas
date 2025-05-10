@@ -1,11 +1,10 @@
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Plant, PlantCategory } from "@/types/plants";
-import { Search, Leaf, ChevronDown } from "lucide-react";
+import { Plant } from "@/types/plants";
+import { Search, Leaf } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,81 +17,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { toast } from "sonner";
-import PlantAI from "@/components/PlantAI";
 import { Sparkles } from "lucide-react";
+import PlantAI from "@/components/PlantAI";
+import { usePlants } from "@/hooks/usePlantData";
 
 const PlantExplorer = () => {
-  const [plants, setPlants] = useState<Plant[]>([]);
-  const [categories, setCategories] = useState<PlantCategory[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedPlant, setSelectedPlant] = useState<Plant | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("plant_categories")
-          .select("*");
-        
-        if (error) {
-          throw error;
-        }
-        
-        setCategories(data || []);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-        toast.error("Failed to load plant categories");
-      }
-    };
-    
-    fetchCategories();
-  }, []);
-  
-  useEffect(() => {
-    const fetchPlants = async () => {
-      setLoading(true);
-      
-      try {
-        let query = supabase
-          .from("plants")
-          .select(`
-            *,
-            plant_categories(name)
-          `);
-          
-        if (selectedCategory !== "all") {
-          query = query.eq("category_id", parseInt(selectedCategory));
-        }
-        
-        const { data, error } = await query;
-        
-        if (error) {
-          throw error;
-        }
-        
-        setPlants(data || []);
-      } catch (error) {
-        console.error("Error fetching plants:", error);
-        toast.error("Failed to load plants");
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchPlants();
-  }, [selectedCategory]);
-
-  const filteredPlants = plants.filter((plant) => {
-    return (
-      plant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      plant.scientific_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (plant.description && plant.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (plant.medicinal_uses && plant.medicinal_uses.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+  // Use our new custom hook
+  const { 
+    plants, 
+    categories, 
+    loading,
+    refresh 
+  } = usePlants({
+    categoryId: selectedCategory !== "all" ? parseInt(selectedCategory) : null,
+    searchTerm: searchTerm
   });
 
   const defaultImage = "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=800&h=600&q=80";
@@ -101,6 +44,11 @@ const PlantExplorer = () => {
     e.preventDefault();
     setSelectedPlant(plant);
     setIsDetailsOpen(true);
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    refresh();
   };
 
   return (
@@ -116,7 +64,7 @@ const PlantExplorer = () => {
               Discover the healing properties of plants used in traditional Ayurvedic, Unani, and Siddha medicine systems.
             </p>
             
-            <div className="flex flex-col md:flex-row gap-4 max-w-3xl mx-auto">
+            <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4 max-w-3xl mx-auto">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <Input
@@ -140,7 +88,14 @@ const PlantExplorer = () => {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+              
+              <Button 
+                type="submit" 
+                className="bg-herbal-green hover:bg-herbal-green/90"
+              >
+                Search
+              </Button>
+            </form>
           </div>
         </div>
         
@@ -155,9 +110,9 @@ const PlantExplorer = () => {
                 </div>
               ))}
             </div>
-          ) : filteredPlants.length > 0 ? (
+          ) : plants.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {filteredPlants.map((plant) => (
+              {plants.map((plant) => (
                 <div key={plant.id} onClick={(e) => handlePlantClick(plant, e)}>
                   <Card className="h-full overflow-hidden hover:shadow-md transition-shadow duration-300 cursor-pointer">
                     <div className="h-48 overflow-hidden">
